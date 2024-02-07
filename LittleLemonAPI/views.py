@@ -1,11 +1,9 @@
-from django.shortcuts import render
 from rest_framework import generics, permissions
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
-from .models import MenuItem
-from .serializers import MenuItemSerializer
+from .serializers import *
 
 
-# Create your views here.
+# MENU ITEMS VIEWS
+
 
 class MenuItemsListView(generics.ListCreateAPIView):
     queryset = MenuItem.objects.all()
@@ -17,3 +15,11 @@ class MenuItemsDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+
+# CART MANAGEMENT VIEWS
+
+# ORDER MANAGEMENT VIEWS
+# class OrderItemsListView(generics.ListAPIView):
+
+# USER GROUP MANAGEMENT VIEWS
