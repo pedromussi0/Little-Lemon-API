@@ -23,7 +23,7 @@ class CartSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Cart
-        fields = ["id", "user", "menuitem", "quantity", "unit_price", "price"]
+        fields = ["id", "menuitem", "quantity", "unit_price", "price"]
         read_only_fields = ["price"]
 
     def create(self, validated_data):
@@ -38,9 +38,19 @@ class CartSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    cart_items = CartSerializer(many=True, read_only=True)  # Corrected source
+
     class Meta:
         model = Order
-        fields = ["id", "user", "delivery_crew", "status", "total", "date"]
+        fields = [
+            "id",
+            "user",
+            "delivery_crew",
+            "status",
+            "total",
+            "date",
+            "cart_items",
+        ]
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
