@@ -71,10 +71,8 @@ class OrdersListView(generics.ListCreateAPIView):
                 {"message": "Cart is empty"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Calculate the total price of the order
         total_price = sum(cart_item.price for cart_item in user_cart)
 
-        # Create a new order
         order = Order.objects.create(
             user=request.user, total=total_price, status=False, date=date.today()
         )
@@ -101,6 +99,72 @@ class OrdersListView(generics.ListCreateAPIView):
 
         return Response(
             {"message": "Order created successfully"}, status=status.HTTP_201_CREATED
+        )
+
+
+class OrderDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+
+        if user.groups.filter(name="Manager").exists():
+            return Order.objects.all()
+        else:
+            return Order.objects.filter(user=user)
+
+    def get(self, request, *args, **kwargs):
+        order = self.get_object()
+
+        if order.user != request.user:
+            return Response(
+                {"message": "You don't have permission to view this order."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        serializer = self.get_serializer(order)
+        return Response(serializer.data)
+
+    def put(self, request, *args, **kwargs):
+        order = self.get_object()
+
+        if (
+            not request.user.groups.filter(name="Manager").exists()
+            and order.user != request.user
+        ):
+            return Response(
+                {"message": "You don't have permission to update this order."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        serializer = self.get_serializer(order, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, *args, **kwargs):
+
+        return self.put(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        order = self.get_object()
+
+        if (
+            not request.user.groups.filter(name="Manager").exists()
+            or order.user != request.user
+        ):
+            return Response(
+                {"message": "You don't have permission to delete this order."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        order.delete()
+        return Response(
+            {"message": "Order deleted successfully."},
+            status=status.HTTP_204_NO_CONTENT,
         )
 
 
